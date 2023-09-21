@@ -70,7 +70,17 @@ class simpledb{
   }
 
   void dbUpdate(std::string valueToRemove, std::string valueToInsert){
-
+    for(auto i = db.begin(); i != db.end();){
+      if(i -> second == valueToRemove){
+        const int* whereToInsert = &(i -> first); 
+        //tive que apontar pro ponteiro que aponta pro valor
+        //coloquei como constante porque o console pediu ? 
+        std::cout << "o valor removido foi" << valueToRemove << std::endl;
+        i = db.erase(i);
+        db.insert(std::pair<int, std::string>(*whereToInsert, valueToInsert));
+      }
+      i++;
+    }
   }
 };
 class ReceiveCommands{
@@ -84,8 +94,15 @@ int main()
   debugTools debug;
   
   datab.dbInsert();
+  datab.dbInsert();
   debug.displayDB(datab.db);
-  datab.dbSearch("batata");
+  std::string newValue;
+  std::cin >> newValue;
+  datab.dbUpdate("batata", newValue);
+  debug.displayDB(datab.db);
+
+
+
   return 0;
 }
 
