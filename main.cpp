@@ -31,10 +31,7 @@ class simpledb{
     std::string userKey = input.getKey();
 
     db.insert(std::pair<std::string, std::string>(userKey, userValue));
-    
-    for(auto pair : db){
-      std::cout << "a chave é " <<pair.first << " o valor é " << pair.second;
-    }
+    std::cout << "a chave é " << userKey << " o valor é " << userValue << std::endl;
   }
 };
 
