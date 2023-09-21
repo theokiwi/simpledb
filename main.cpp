@@ -5,8 +5,8 @@
 class getUserInput {
   public:
 
-  std::string getKey(){
-    std::string userKey;
+  int getKey(){
+    int userKey;
     std::cin >> userKey;
 
     return userKey;
@@ -24,7 +24,7 @@ class getUserInput {
 class debugTools{
   public:
 
-  void displayDB(std::map<std::string, std::string> db){
+  void displayDB(std::map<int, std::string> db){
     for (auto pair : db){
       std::cout << pair.first << " " << pair.second << std::endl;
     }
@@ -34,44 +34,59 @@ class debugTools{
 class simpledb{
   public:
   getUserInput input;
-  std::map<std::string, std::string> db; 
+  std::map<int, std::string> db; 
 
   void dbInsert(){
-    std::string userKey = input.getKey();
+    int userKey = input.getKey();
     std::string userValue = input.getValue();
 
-    db.insert(std::pair<std::string, std::string>(userKey, userValue));
+    db.insert(std::pair<int, std::string>(userKey, userValue));
     std::cout << "a chave é " << userKey << " o valor é " << userValue << std::endl;
   }
 
-  bool dbSearch(std::map<std::string, std::string> db, std::string userValue){
-    std::string value = userValue;
-    std::string* ptrValue;
-    for(int i = 0; i < sizeof(db)/sizeof(std::string); i++){
-      //loop pelo dicionario e comparar valor, retornar true se achar;
+  bool dbSearch(std::string userValue){
+     std::string value = userValue;
+    for(auto i = db.begin(); i != db.end();){
+      if(i -> second == userValue){
+        std::cout << "encontrado";
+        return true;
+      }
+      i++;
+    }
+    std::cout << "não encontrado";
+    return false;
+  }
+//o db remove usou ponteiros porque se eu so removesse o i ele eliminar um item do for
+//e ia quebrar o for e me dava um erro falando que eu não tinha permissão
+//eu tive que "i = db.erase(I)" ao inves de so db.erase porque o erase retorna pro i um ponteiro
+//apontando pro proximo ponto
+  void dbRemove(std::string userValue){
+   std::string value = userValue;
+    for(auto i = db.begin(); i != db.end();){
+      if(i -> second == userValue){
+      std::cout << "o valor removido foi" << userValue;
+      i = db.erase(i);
+      }
+      i++;
     }
   }
-
-  void dbRemove(std::map<std::string, std::string> db, std::string userValue){
-  if(dbSearch(db, userValue)){
-    std::string userKey = input.getKey();
-    db.erase((userKey));
-    std::cout << "a chave removida foi " << userKey;
-  }
+};
+class ReceiveCommands{
 
 };
 
 int main()
-{
+{ 
   getUserInput input;
-  simpledb db;
+  simpledb datab;
   debugTools debug;
-
-  db.dbInsert();
-  debug.displayDB(db.db);
+  
+  datab.dbInsert();
+  debug.displayDB(datab.db);
+  datab.dbSearch("batata");
   return 0;
 }
 
+//TODO LIST
+//inserir comandos com switch 
 
-
-};
