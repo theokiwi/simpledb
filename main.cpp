@@ -45,7 +45,6 @@ class simpledb{
   }
 
   bool dbSearch(std::string userValue){
-     std::string value = userValue;
     for(auto i = db.begin(); i != db.end();){
       if(i -> second == userValue){
         std::cout << "encontrado";
@@ -61,7 +60,6 @@ class simpledb{
 //eu tive que "i = db.erase(I)" ao inves de so db.erase porque o erase retorna pro i um ponteiro
 //apontando pro proximo ponto
   void dbRemove(std::string userValue){
-   std::string value = userValue;
     for(auto i = db.begin(); i != db.end();){
       if(i -> second == userValue){
       std::cout << "o valor removido foi" << userValue;
@@ -69,6 +67,10 @@ class simpledb{
       }
       i++;
     }
+  }
+
+  void dbUpdate(std::string valueToRemove, std::string valueToInsert){
+
   }
 };
 class ReceiveCommands{
