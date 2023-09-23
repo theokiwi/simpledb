@@ -1,7 +1,11 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <fstream>
 
+// não to usando "using namespace std" porque quando eu estava estudando c++ 
+// eu vi alguem falar que era melhor não usar pra sempre saber de que biblioteca
+// estão vindo as coisas e eu concordei 
 class getUserInput {
   public:
 
@@ -83,6 +87,30 @@ class simpledb{
     }
   }
 };
+
+class writeToFile{
+  public:
+  std::fstream dbFile;
+
+  void wToFile(std::map<int, std::string> db){
+    dbFile.open("dbLog.txt"), std::ios::out;
+    if(dbFile.is_open()){
+      for (auto pair : db){
+      dbFile << pair.first << " " << pair.second << std::endl;
+      }
+    }
+    dbFile.close();
+  }
+
+  void clearFile(){
+    dbFile.open("dbLog.txt", std::ios::out);
+      if(dbFile.is_open()){
+        dbFile.clear();
+      }
+    dbFile.close();
+
+    }
+  };
 class ReceiveCommands{
 
 };
@@ -92,20 +120,15 @@ int main()
   getUserInput input;
   simpledb datab;
   debugTools debug;
+  writeToFile write;
   
   datab.dbInsert();
-  datab.dbInsert();
-  debug.displayDB(datab.db);
-  std::string newValue;
-  std::cin >> newValue;
-  datab.dbUpdate("batata", newValue);
-  debug.displayDB(datab.db);
-
-
-
+  write.wToFile(datab.db);
+  write.clearFile();
   return 0;
 }
 
 //TODO LIST
+//Escrita em arquivo
 //inserir comandos com switch 
 
