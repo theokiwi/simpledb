@@ -4,8 +4,7 @@
 Projeto feito no vscode com coderunner, as extensões padrões de C++ e o compiler G++. No SO linux mint.
 Project built on vscode with coderunner, C++ default extensions and G++ compiler. On linux mint SO. 
 
-Final Build PrimeiraEntrega
-Final Build FirstAssingment
+Final Build PrimeiraEntrega/Final Build FirstAssignment
 
 Uma database não sql simples para a disciplina "Sistemas Operacionais" na Puc Minas. Feita em C++.
 A simple non sql database for the course "Sistemas Operacionais" on PUC Minas. Built on C++.
