@@ -2,6 +2,8 @@
 #include <map>
 #include <string>
 #include <fstream>
+#include <cstring>
+#include <cstdlib>
 
 // não to usando "using namespace std" porque quando eu estava estudando c++ 
 // eu vi alguem falar que era melhor não usar pra sempre saber de que biblioteca
@@ -28,25 +30,7 @@ class writeToFile{
     dbFile.close();
 
     }
-  };
-class getUserInput {
-  public:
-
-  int getKey(){
-    int userKey;
-    std::cin >> userKey;
-
-    return userKey;
-  }
-
-  std::string getValue(){
-      std::string userValue;
-      std::cin >> userValue;
-
-      return userValue;
-  } 
-  
-};
+ };
 
 class debugTools{
   public:
@@ -60,13 +44,13 @@ class debugTools{
 
 class simpledb{
   public:
-  getUserInput input;
+  // getUserInput input;
   writeToFile write;
   std::map<int, std::string> db; 
 
-  void dbInsert(){
-    int userKey = input.getKey();
-    std::string userValue = input.getValue();
+  void dbInsert(int userKey, std::string userValue){
+    // int userKey = input.getKey();
+    // std::string userValue = input.getValue();
 
     db.insert(std::pair<int, std::string>(userKey, userValue));
     std::cout << "a chave é " << userKey << " o valor é " << userValue << std::endl;
@@ -104,35 +88,56 @@ class simpledb{
     for(auto i = db.begin(); i != db.end();){
       if(i -> second == valueToRemove){
         const int* whereToInsert = &(i -> first); 
-        //tive que apontar pro ponteiro que aponta pro valor
-        //coloquei como constante porque o console pediu ? 
+          //tive que apontar pro ponteiro que aponta pro valor
+          //coloquei como constante porque o console pediu ? 
         std::cout << "o valor removido foi" << valueToRemove << std::endl;
         i = db.erase(i);
         db.insert(std::pair<int, std::string>(*whereToInsert, valueToInsert));
+        write.clearFile();
+        write.wToFile(db);
       }
       i++;
     }
   }
 };
 
-class ReceiveCommands{
-
-};
-
-int main()
+int main(int argc, char** argv)
 { 
-  getUserInput input;
+  // getUserInput input;
   simpledb datab;
   debugTools debug;
   writeToFile write;
-  
-  datab.dbInsert();
-  datab.dbInsert();
-  datab.dbRemove("batata");
-  return 0;
-}
 
-//TODO LIST
-//Escrita em arquivo
-//inserir comandos com switch 
+  if(std::strcmp(argv[1], "simpledb") == 0){
+    //insert
+        if(std::strcmp(argv[2], "insert") == 0){
+          datab.dbInsert(std::atoi(argv[3]), argv[4]);
+        }
+    //remove
+        else if(std::strcmp(argv[2], "remove") == 0){
+          datab.dbRemove(argv[3]);
+        }
+    //search
+        else if(std::strcmp(argv[2], "search") == 0){
+          datab.dbSearch(argv[3]);
+        }
+    //update  
+        else if(std::strcmp(argv[2], "update") == 0){
+          datab.dbUpdate(argv[3], argv[4]);
+          debug.displayDB(datab.db);
+        }
+    //quit
+        else if(std::strcmp(argv[2], "quit") == 0){
+              exit(0);
+        }
+    }
+          return 0;
+
+  }
+    
+
+  
+
+
+
 
