@@ -6,6 +6,29 @@
 // não to usando "using namespace std" porque quando eu estava estudando c++ 
 // eu vi alguem falar que era melhor não usar pra sempre saber de que biblioteca
 // estão vindo as coisas e eu concordei 
+class writeToFile{
+  public:
+  std::fstream dbFile;
+
+  void wToFile(std::map<int, std::string> db){
+    dbFile.open("dbLog.txt"), std::ios::out;
+    if(dbFile.is_open()){
+      for (auto pair : db){
+      dbFile << pair.first << " " << pair.second << std::endl;
+      }
+    }
+    dbFile.close();
+  }
+
+  void clearFile(){
+    dbFile.open("dbLog.txt", std::ios::out);
+      if(dbFile.is_open()){
+        dbFile.clear();
+      }
+    dbFile.close();
+
+    }
+  };
 class getUserInput {
   public:
 
@@ -38,6 +61,7 @@ class debugTools{
 class simpledb{
   public:
   getUserInput input;
+  writeToFile write;
   std::map<int, std::string> db; 
 
   void dbInsert(){
@@ -46,6 +70,7 @@ class simpledb{
 
     db.insert(std::pair<int, std::string>(userKey, userValue));
     std::cout << "a chave é " << userKey << " o valor é " << userValue << std::endl;
+    write.wToFile(db);
   }
 
   bool dbSearch(std::string userValue){
@@ -68,6 +93,8 @@ class simpledb{
       if(i -> second == userValue){
       std::cout << "o valor removido foi" << userValue;
       i = db.erase(i);
+      write.clearFile();
+      write.wToFile(db);
       }
       i++;
     }
@@ -88,29 +115,6 @@ class simpledb{
   }
 };
 
-class writeToFile{
-  public:
-  std::fstream dbFile;
-
-  void wToFile(std::map<int, std::string> db){
-    dbFile.open("dbLog.txt"), std::ios::out;
-    if(dbFile.is_open()){
-      for (auto pair : db){
-      dbFile << pair.first << " " << pair.second << std::endl;
-      }
-    }
-    dbFile.close();
-  }
-
-  void clearFile(){
-    dbFile.open("dbLog.txt", std::ios::out);
-      if(dbFile.is_open()){
-        dbFile.clear();
-      }
-    dbFile.close();
-
-    }
-  };
 class ReceiveCommands{
 
 };
@@ -123,8 +127,8 @@ int main()
   writeToFile write;
   
   datab.dbInsert();
-  write.wToFile(datab.db);
-  write.clearFile();
+  datab.dbInsert();
+  datab.dbRemove("batata");
   return 0;
 }
 
