@@ -13,7 +13,7 @@ class writeToFile{
   std::fstream dbFile;
 
   void wToFile(std::map<int, std::string> db){
-    dbFile.open("dbLog.txt"), std::ios::out;
+    dbFile.open("dbLog.txt", std::ios::out);
     if(dbFile.is_open()){
       for (auto pair : db){
       dbFile << pair.first << " " << pair.second << std::endl;
