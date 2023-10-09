@@ -18,7 +18,7 @@ Uma database não sql simples para a disciplina "Sistemas Operacionais" na Puc M
 - ./main simpledb quit -> Fecha a aplicação.
 
 #### (ENG)
-Project built on vscode with coderunner, C++ default extensions and G++ compiler. On linux mint SO. 
+Project built on vscode with coderunner, C++ default extensions and G++ compiler. On linux mint OS. 
 A simple non sql database for the course "Operational Systems" on PUC Minas. Built on C++.
 
 ### Instructions
