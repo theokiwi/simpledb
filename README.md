@@ -1,28 +1,36 @@
 # simpledb
 
-#### (PT-BR/ENG)
+#### (ENG)
 
 Projeto feito no vscode com coderunner, as extensões padrões de C++ e o compiler G++. No SO linux mint.
-Project built on vscode with coderunner, C++ default extensions and G++ compiler. On linux mint SO. 
-
-## Final Build PrimeiraEntrega/Final Build FirstAssignment
-
 Uma database não sql simples para a disciplina "Sistemas Operacionais" na Puc Minas. Feita em C++.
-A simple non sql database for the course "Sistemas Operacionais" on PUC Minas. Built on C++.
 
-### Instruções/Instructions
+### Instruções
 
-- ./main simpledb insert <key(int), value(string)>
+- ./main simpledb insert <key(int), value(string)> -> Insere chave e valor.
 
-- ./main simpledb remove <value(string)>
+- ./main simpledb remove <value(string)> -> Remove chave e valor usando valor.
 
-- ./main simpledb search <value(string)>
+- ./main simpledb search <value(string)> -> Procura valor.
 
-- ./main simpledb update <value(String, nemValue(string))>
+- ./main simpledb update <value(String, nemValue(string))> -> Substitui antigo valor no Banco de Dados por valor atual inserido.
 
-- ./main simpledb quit
+- ./main simpledb quit -> Fecha a aplicação.
 
-#### Para o professor/(Message to my teacher): 
+#### (ENG)
+Project built on vscode with coderunner, C++ default extensions and G++ compiler. On linux mint OS. 
+A simple non sql database for the course "Operational Systems" on PUC Minas. Built on C++.
 
-O meu código ficou um pouco diferente do solicitado na tarefa porque eu fiz algumas alterações que eu considerei mais funcionais. Por exemplo, estou fazendo a pesquisa por valor e não por chave porque eu assumi que o usuário não teria como saber qual int a coisa que ele está procurando recebeu dentro do programa. Além disso eu estou fazendo as operações dentro do dicionário e usando ele como banco de dados e não usando o arquivo de texto pra fazer as operações ele funciona apenas como um log, porque eu também achei que seria mais funcional. Não sei se tem problema, mas a minha percepção foi de que o código funcionaria melhor assim e faria pouca diferença para o usuário porque ele continuaria funcionando. Fora isso o readme tá em inglês e português porque queria usar ele para portifolio. 
+### Instructions
+
+- ./main simpledb insert <key(int), value(string)> -> Inserts key and value.
+
+- ./main simpledb remove <value(string)> -> Removes key and value, using value.
+
+- ./main simpledb search <value(string)> -> Searchs for value.
+
+- ./main simpledb update <value(String, nemValue(string))> -> Replaces old value with a new assigned value.
+
+- ./main simpledb quit -> Closes the app.
+
 
