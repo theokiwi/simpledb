@@ -12,22 +12,28 @@ class writeToFile{
   public:
   std::fstream dbFile;
 
-  void wToFile(std::map<int, std::string> db){
-    dbFile.open("dbLog.txt", std::ios::out);
+  void wToFile(std::map<int, std::string> db){  //escreve os pares no arquivo
+    dbFile.open("dbLog.txt", std::ios::out); //inicializa o arquivo de texto
     if(dbFile.is_open()){
       for (auto pair : db){
-      dbFile << pair.first << " " << pair.second << std::endl;
+      dbFile << pair.first << " " << pair.second << std::endl; //se o arquivo de texto estiver aberto insere os pares para cada pair
       }
     }
-    dbFile.close();
+    else{
+      std::cout<<"não tem um arquivo de log disponivel";
+    }
+    dbFile.close(); //fecha o arquivo depois de completar a escrita
   }
 
-  void clearFile(){
-    dbFile.open("dbLog.txt", std::ios::out);
+  void clearFile(){ //responsavel por limpar o arquivo 
+    dbFile.open("dbLog.txt", std::ios::out); //inicializa o arquivo de texto
       if(dbFile.is_open()){
-        dbFile.clear();
+        dbFile.clear(); // se o arquivo de texto tiver aberto da clear em tudo la dentro
       }
-    dbFile.close();
+      else{
+        std::cout<<"não tem um arquivo de log disponível";
+      }
+    dbFile.close(); //fecha o arquivo depois de completar a remoção de escrita
 
     }
  };
@@ -37,73 +43,66 @@ class debugTools{
 
   void displayDB(std::map<int, std::string> db){
     for (auto pair : db){
-      std::cout << pair.first << " " << pair.second << std::endl;
+      std::cout << pair.first << " " << pair.second << std::endl; //ferramente de debug printa os pares no console
     }
   }
 };
 
 class simpledb{
   public:
-  // getUserInput input;
-  writeToFile write;
+  writeToFile write; //instancia a classe de escrita em arquivo 
   std::map<int, std::string> db; 
 
-  void dbInsert(int userKey, std::string userValue){
-    // int userKey = input.getKey();
-    // std::string userValue = input.getValue();
-
-    db.insert(std::pair<int, std::string>(userKey, userValue));
-    std::cout << "a chave é " << userKey << " o valor é " << userValue << std::endl;
-    write.wToFile(db);
+  void dbInsert(int userKey, std::string userValue){ //responsavel por inserir no banco de dados
+    db.insert(std::pair<int, std::string>(userKey, userValue)); //insere no banco de dados
+    std::cout << "a chave é " << userKey << " o valor é " << userValue << std::endl; //printa o que foi inserido
+    write.wToFile(db); //escreve no arquivo o que foi inserido
   }
 
-  bool dbSearch(std::string userValue){
-    for(auto i = db.begin(); i != db.end();){
-      if(i -> second == userValue){
-        std::cout << "encontrado";
-        return true;
+  bool dbSearch(std::string userValue){ //pesquisa no banco de dados um valor 
+    for(auto i = db.begin(); i != db.end();){ //percorre o map até o fim
+      if(i -> second == userValue){ //acessa o valor por meio de um ponteiro e compara com o valor apresentado pelo ususario
+        std::cout << "encontrado"; 
+        return true;//se o valor for encontrado printa encontrado e retorna true
       }
       i++;
     }
-    std::cout << "não encontrado";
-    return false;
+    std::cout << "não encontrado"; 
+    return false; //se o valor não for encontrado pritna não encontrado e retorna false
   }
 //o db remove usou ponteiros porque se eu so removesse o i ele eliminar um item do for
 //e ia quebrar o for e me dava um erro falando que eu não tinha permissão
 //eu tive que "i = db.erase(I)" ao inves de so db.erase porque o erase retorna pro i um ponteiro
 //apontando pro proximo ponto
-  void dbRemove(std::string userValue){
-    for(auto i = db.begin(); i != db.end();){
-      if(i -> second == userValue){
+  void dbRemove(std::string userValue){ //remove do banco de dados o valor apontado pelo usuario
+    for(auto i = db.begin(); i != db.end();){ //percorre o map até o fim
+      if(dbSearch(userValue) == true){ //verifica se o valor existe no banco de dados
       std::cout << "o valor removido foi" << userValue;
       i = db.erase(i);
       write.clearFile();
-      write.wToFile(db);
+      write.wToFile(db); //se o valor existir remove o valor, limpa o arquivo de texto e reescreve com os itens atuais
       }
-      i++;
+      i++; //incrementa, se não existir o valor ele só pula pra cá e incrementa de uma vez
     }
   }
 
-  void dbUpdate(std::string valueToRemove, std::string valueToInsert){
-    for(auto i = db.begin(); i != db.end();){
-      if(i -> second == valueToRemove){
-        const int* whereToInsert = &(i -> first); 
-          //tive que apontar pro ponteiro que aponta pro valor
-          //coloquei como constante porque o console pediu ? 
+  void dbUpdate(std::string valueToRemove, std::string valueToInsert){ //substitui um valor existente no db por um novo valor
+    for(auto i = db.begin(); i != db.end();){ //percorre o map até o fim
+      if(i -> second == valueToRemove){ //se o valor for igual o valor buscado
+        const int* whereToInsert = &(i -> first);  //um int que calcula a posição usando um ponteiro, tive que apontar pro ponteiro que aponta pro valor
         std::cout << "o valor removido foi" << valueToRemove << std::endl;
         i = db.erase(i);
-        db.insert(std::pair<int, std::string>(*whereToInsert, valueToInsert));
+        db.insert(std::pair<int, std::string>(*whereToInsert, valueToInsert)); //substitui o valor
         write.clearFile();
-        write.wToFile(db);
+        write.wToFile(db); //limpa o arquivo e preenche com os novos dados do banco de dados
       }
-      i++;
+      i++; //incrementa, se não encontrar o valor ele só pula pra cá e incrementa de uma vez
     }
   }
 };
 
 int main(int argc, char** argv)
 { 
-  // getUserInput input;
   simpledb datab;
   debugTools debug;
   writeToFile write;
@@ -130,6 +129,12 @@ int main(int argc, char** argv)
         else if(std::strcmp(argv[2], "quit") == 0){
               exit(0);
         }
+        else{
+          std::cout<<"resposta invalida";
+        }     
+    }
+    else if(std::strcmp(argv[1], "simpledb") != 0){
+          std::cout<<"resposta invalida, comandos começam com simpledb";
     }
           return 0;
 
