@@ -4,10 +4,10 @@
 #include <fstream>
 #include <cstring>
 #include <cstdlib>
+#include <stdexcept>
+#include <thread>
 
-// não to usando "using namespace std" porque quando eu estava estudando c++ 
-// eu vi alguem falar que era melhor não usar pra sempre saber de que biblioteca
-// estão vindo as coisas e eu concordei 
+// lançar exceção com comando
 class writeToFile{
   public:
   std::fstream dbFile;
@@ -20,7 +20,7 @@ class writeToFile{
       }
     }
     else{
-      std::cout<<"não tem um arquivo de log disponivel";
+      throw 101;
     }
     dbFile.close(); //fecha o arquivo depois de completar a escrita
   }
@@ -31,7 +31,7 @@ class writeToFile{
         dbFile.clear(); // se o arquivo de texto tiver aberto da clear em tudo la dentro
       }
       else{
-        std::cout<<"não tem um arquivo de log disponível";
+        throw 101;
       }
     dbFile.close(); //fecha o arquivo depois de completar a remoção de escrita
 
@@ -110,11 +110,21 @@ int main(int argc, char** argv)
   if(std::strcmp(argv[1], "simpledb") == 0){
     //insert
         if(std::strcmp(argv[2], "insert") == 0){
-          datab.dbInsert(std::atoi(argv[3]), argv[4]);
+          try{
+            datab.dbInsert(std::atoi(argv[3]), argv[4]);
+          }
+          catch (int exCode){
+            std::cout << "O log não pode ser inicializado, favor inserir a função novamente";
+          }
         }
     //remove
         else if(std::strcmp(argv[2], "remove") == 0){
-          datab.dbRemove(argv[3]);
+          try{
+              datab.dbRemove(argv[3]);
+          }
+          catch(int exCode){
+              std::cout << "O log não pode ser inicializado, favor inserir a função novamente";
+          }
         }
     //search
         else if(std::strcmp(argv[2], "search") == 0){
@@ -122,8 +132,14 @@ int main(int argc, char** argv)
         }
     //update  
         else if(std::strcmp(argv[2], "update") == 0){
-          datab.dbUpdate(argv[3], argv[4]);
-          debug.displayDB(datab.db);
+          try{
+              datab.dbUpdate(argv[3], argv[4]);
+              debug.displayDB(datab.db);
+          }
+          catch(int exCode){
+              std::cout << "Error: " << exCode << " O log não pode ser inicializado, favor inserir a função novamente";
+          }
+          
         }
     //quit
         else if(std::strcmp(argv[2], "quit") == 0){
@@ -134,7 +150,13 @@ int main(int argc, char** argv)
         }     
     }
     else if(std::strcmp(argv[1], "simpledb") != 0){
-          std::cout<<"resposta invalida, comandos começam com simpledb";
+      throw 102;
+      try{
+
+      }
+      catch(int exCode){
+        std::cout << "Error: " << exCode << " Comandos devem ter simpledb como primeiro argumento";
+      }
     }
           return 0;
 
