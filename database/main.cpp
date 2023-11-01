@@ -13,27 +13,37 @@ class writeToFile{
   std::fstream dbFile;
 
   void wToFile(std::map<int, std::string> db){  //escreve os pares no arquivo
-    dbFile.open("dbLog.txt", std::ios::out); //inicializa o arquivo de texto
+  try{
+    dbFile.open("dbLog.txt", std::ios::out); 
     if(dbFile.is_open()){
       for (auto pair : db){
-      dbFile << pair.first << " " << pair.second << std::endl; //se o arquivo de texto estiver aberto insere os pares para cada pair
+      dbFile << pair.first << " " << pair.second << std::endl; 
       }
     }
     else{
       throw 101;
     }
-    dbFile.close(); //fecha o arquivo depois de completar a escrita
+  }
+  catch (int exCode){
+    std::cout << "Error: " << exCode << "O arquivo de escrita não pode ser aberto";
+  }
+    dbFile.close(); 
   }
 
   void clearFile(){ //responsavel por limpar o arquivo 
-    dbFile.open("dbLog.txt", std::ios::out); //inicializa o arquivo de texto
+  try{
+    dbFile.open("dbLog.txt", std::ios::out); 
       if(dbFile.is_open()){
-        dbFile.clear(); // se o arquivo de texto tiver aberto da clear em tudo la dentro
+        dbFile.clear();
       }
       else{
         throw 101;
       }
-    dbFile.close(); //fecha o arquivo depois de completar a remoção de escrita
+  }
+  catch (int exCode){
+        std::cout << "Error: " << exCode << "O arquivo de escrita não pode ser aberto";
+  }
+    dbFile.close(); 
 
     }
  };
@@ -41,62 +51,58 @@ class writeToFile{
 class debugTools{
   public:
 
-  void displayDB(std::map<int, std::string> db){
+  void displayDB(std::map<int, std::string> db){ //ferramente de debug printa os pares no console
     for (auto pair : db){
-      std::cout << pair.first << " " << pair.second << std::endl; //ferramente de debug printa os pares no console
+      std::cout << pair.first << " " << pair.second << std::endl; 
     }
   }
 };
 
 class simpledb{
   public:
-  writeToFile write; //instancia a classe de escrita em arquivo 
+  writeToFile write; 
   std::map<int, std::string> db; 
 
-  void dbInsert(int userKey, std::string userValue){ //responsavel por inserir no banco de dados
-    db.insert(std::pair<int, std::string>(userKey, userValue)); //insere no banco de dados
-    std::cout << "a chave é " << userKey << " o valor é " << userValue << std::endl; //printa o que foi inserido
-    write.wToFile(db); //escreve no arquivo o que foi inserido
+  void dbInsert(int userKey, std::string userValue){ //inserir no banco de dados
+    db.insert(std::pair<int, std::string>(userKey, userValue)); 
+    std::cout << "a chave é " << userKey << " o valor é " << userValue << std::endl; 
+    write.wToFile(db);
   }
 
   bool dbSearch(std::string userValue){ //pesquisa no banco de dados um valor 
-    for(auto i = db.begin(); i != db.end();){ //percorre o map até o fim
-      if(i -> second == userValue){ //acessa o valor por meio de um ponteiro e compara com o valor apresentado pelo ususario
+    for(auto i = db.begin(); i != db.end();){ 
+      if(i -> second == userValue){ 
         std::cout << "encontrado"; 
-        return true;//se o valor for encontrado printa encontrado e retorna true
+        return true;
       }
       i++;
     }
     std::cout << "não encontrado"; 
-    return false; //se o valor não for encontrado pritna não encontrado e retorna false
+    return false;
   }
-//o db remove usou ponteiros porque se eu so removesse o i ele eliminar um item do for
-//e ia quebrar o for e me dava um erro falando que eu não tinha permissão
-//eu tive que "i = db.erase(I)" ao inves de so db.erase porque o erase retorna pro i um ponteiro
-//apontando pro proximo ponto
   void dbRemove(std::string userValue){ //remove do banco de dados o valor apontado pelo usuario
-    for(auto i = db.begin(); i != db.end();){ //percorre o map até o fim
-      if(dbSearch(userValue) == true){ //verifica se o valor existe no banco de dados
+    for(auto i = db.begin(); i != db.end();){ 
+      if(dbSearch(userValue) == true){ 
       std::cout << "o valor removido foi" << userValue;
       i = db.erase(i);
       write.clearFile();
-      write.wToFile(db); //se o valor existir remove o valor, limpa o arquivo de texto e reescreve com os itens atuais
+      write.wToFile(db);
       }
-      i++; //incrementa, se não existir o valor ele só pula pra cá e incrementa de uma vez
+      i++; 
     }
   }
 
   void dbUpdate(std::string valueToRemove, std::string valueToInsert){ //substitui um valor existente no db por um novo valor
-    for(auto i = db.begin(); i != db.end();){ //percorre o map até o fim
-      if(i -> second == valueToRemove){ //se o valor for igual o valor buscado
-        const int* whereToInsert = &(i -> first);  //um int que calcula a posição usando um ponteiro, tive que apontar pro ponteiro que aponta pro valor
+    for(auto i = db.begin(); i != db.end();){ 
+      if(i -> second == valueToRemove){ 
+        const int* whereToInsert = &(i -> first); 
         std::cout << "o valor removido foi" << valueToRemove << std::endl;
         i = db.erase(i);
-        db.insert(std::pair<int, std::string>(*whereToInsert, valueToInsert)); //substitui o valor
+        db.insert(std::pair<int, std::string>(*whereToInsert, valueToInsert)); 
         write.clearFile();
-        write.wToFile(db); //limpa o arquivo e preenche com os novos dados do banco de dados
+        write.wToFile(db); 
       }
-      i++; //incrementa, se não encontrar o valor ele só pula pra cá e incrementa de uma vez
+      i++; 
     }
   }
 };
@@ -150,9 +156,8 @@ int main(int argc, char** argv)
         }     
     }
     else if(std::strcmp(argv[1], "simpledb") != 0){
-      throw 102;
       try{
-
+        throw 102;
       }
       catch(int exCode){
         std::cout << "Error: " << exCode << " Comandos devem ter simpledb como primeiro argumento";
