@@ -6,8 +6,11 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <thread>
+#include <boost/thread.hpp>
+#include <boost/chrono.hpp>
+#include <mqueue.h>
+#include <cerrno>
 
-// lançar exceção com comando
 class writeToFile{
   public:
   std::fstream dbFile;
@@ -52,9 +55,18 @@ class debugTools{
   public:
 
   void displayDB(std::map<int, std::string> db){ //ferramente de debug printa os pares no console
+  try{
     for (auto pair : db){
       std::cout << pair.first << " " << pair.second << std::endl; 
     }
+    void* checkDb = &db;
+    if(checkDb == NULL){
+      throw 104;
+    }
+  }
+  catch(int exCode){
+    std::cout << "Error: " << exCode << "A database não foi encontrada";
+  }
   }
 };
 
@@ -64,12 +76,22 @@ class simpledb{
   std::map<int, std::string> db; 
 
   void dbInsert(int userKey, std::string userValue){ //inserir no banco de dados
+  try{
     db.insert(std::pair<int, std::string>(userKey, userValue)); 
     std::cout << "a chave é " << userKey << " o valor é " << userValue << std::endl; 
     write.wToFile(db);
+    void* checkDb = &db;
+    if(checkDb == NULL){
+      throw 104;
+    }
+  }
+  catch(int exCode){
+    std::cout << "Error: " << exCode << "A database não foi encontrada";
+  }
   }
 
   bool dbSearch(std::string userValue){ //pesquisa no banco de dados um valor 
+  try{
     for(auto i = db.begin(); i != db.end();){ 
       if(i -> second == userValue){ 
         std::cout << "encontrado"; 
@@ -77,10 +99,19 @@ class simpledb{
       }
       i++;
     }
+     void* checkDb = &db;
+     if(checkDb == NULL){
+      throw 104;
+    }
+  }
+  catch(int exCode){
+    std::cout << "Error: " << exCode << "A database não foi encontrada";
+  }
     std::cout << "não encontrado"; 
     return false;
   }
   void dbRemove(std::string userValue){ //remove do banco de dados o valor apontado pelo usuario
+  try{
     for(auto i = db.begin(); i != db.end();){ 
       if(dbSearch(userValue) == true){ 
       std::cout << "o valor removido foi" << userValue;
@@ -90,9 +121,19 @@ class simpledb{
       }
       i++; 
     }
+     void* checkDb = &db;
+     if(checkDb == NULL){
+      throw 104;
+    }
+  }
+  catch(int exCode){
+    std::cout << "Error: " << exCode << "A database não foi encontrada";
+  }
+
   }
 
   void dbUpdate(std::string valueToRemove, std::string valueToInsert){ //substitui um valor existente no db por um novo valor
+  try{
     for(auto i = db.begin(); i != db.end();){ 
       if(i -> second == valueToRemove){ 
         const int* whereToInsert = &(i -> first); 
@@ -104,68 +145,62 @@ class simpledb{
       }
       i++; 
     }
+    void* checkDb = &db;
+     if(checkDb == NULL){
+      throw 104;
+    }
+  }
+  catch(int exCode){
+    std::cout << "Error: " << exCode << "A database não foi encontrada";
+  }
   }
 };
 
+class thread{
+  //run thread according to the received message, must be a switch
+  //send a message back telling the output/result
+};
+
+struct mq_attr mq_attributes;
+
+
+
 int main(int argc, char** argv)
 { 
-  simpledb datab;
-  debugTools debug;
-  writeToFile write;
+  mq_attributes.mq_flags = 0;       
+  mq_attributes.mq_maxmsg = 10;      
+  mq_attributes.mq_msgsize = 32;  
 
-  if(std::strcmp(argv[1], "simpledb") == 0){
-    //insert
-        if(std::strcmp(argv[2], "insert") == 0){
-          try{
-            datab.dbInsert(std::atoi(argv[3]), argv[4]);
-          }
-          catch (int exCode){
-            std::cout << "O log não pode ser inicializado, favor inserir a função novamente";
-          }
-        }
-    //remove
-        else if(std::strcmp(argv[2], "remove") == 0){
-          try{
-              datab.dbRemove(argv[3]);
-          }
-          catch(int exCode){
-              std::cout << "O log não pode ser inicializado, favor inserir a função novamente";
-          }
-        }
-    //search
-        else if(std::strcmp(argv[2], "search") == 0){
-          datab.dbSearch(argv[3]);
-        }
-    //update  
-        else if(std::strcmp(argv[2], "update") == 0){
-          try{
-              datab.dbUpdate(argv[3], argv[4]);
-              debug.displayDB(datab.db);
-          }
-          catch(int exCode){
-              std::cout << "Error: " << exCode << " O log não pode ser inicializado, favor inserir a função novamente";
-          }
-          
-        }
-    //quit
-        else if(std::strcmp(argv[2], "quit") == 0){
-              exit(0);
-        }
-        else{
-          std::cout<<"resposta invalida";
-        }     
-    }
-    else if(std::strcmp(argv[1], "simpledb") != 0){
-      try{
-        throw 102;
-      }
-      catch(int exCode){
-        std::cout << "Error: " << exCode << " Comandos devem ter simpledb como primeiro argumento";
-      }
-    }
-          return 0;
+  mqd_t mqueue;
 
+
+  mqueue = mq_open("/mqueue", O_CREAT | O_RDWR, 0666, mq_attributes);
+  if (mqueue == (mqd_t)-1) {
+        perror("");
+        return 1;  // Handle the error, don't continue with a bad file descriptor
+    }
+
+
+  char m_received[32];
+  const char* i_received = "insert";
+  unsigned int m_priority = 0;
+
+
+  while(true){    
+    if(ssize_t size_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority) == -1){
+    perror("");
+    }
+  
+    if(strcmp(m_received, i_received) == true){
+      perror("");
+      std::cout << "received message" << m_received;
+    }
+    //receive message
+    //call thread
   }
+  return 0;
+
+}
     
 
   
