@@ -34,16 +34,16 @@ s:
 
 if(std::strcmp(argv[1], "simpledb") == 0){
     //insert
-        if(std::strcmp(argv[2], "insert") == 0){
-          
-          if(mq_send(mqueue, m_insert, strlen(m_insert), 1) == -1){
-            perror("");
-            std::cout << "Está ocorrendo um erro no enviar da queue";
-          }
-          std::cout << "Mensagem " << m_insert << " lançada ao sistema";
-        }
+      if(std::strcmp(argv[2], "insert") == 0){
+           if(mq_send(mqueue, m_insert, strlen(m_insert), 1) == -1){
+             perror("");
+             std::cout << "Está ocorrendo um erro no enviar da queue";
+           }
+           std::cout << "Mensagem " << m_insert << " lançada ao sistema";
+         }
     //remove
-        else if(std::strcmp(argv[2], "remove") == 0){
+        //else 
+        if(std::strcmp(argv[2], "remove") == 0){
           if(mq_send(mqueue, m_remove, strlen(m_remove), 1) == -1){
             perror("");
             std::cout << "Está ocorrendo um erro no enviar da queue";

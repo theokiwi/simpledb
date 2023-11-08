@@ -115,20 +115,24 @@ void dbUpdate(std::string valueToRemove, std::string valueToInsert) { // substit
 }
 };
 class MyThread {
-  // Implement the thread functionality here
+  
 };
 
-struct mq_attr mq_attributes; //declração da 
+struct mq_attr mq_attributes; //struct que guarda as propriedades da mensagem
 
 int main(int argc, char** argv) {
 
   std::cout << "Main iniciada \n";
+
+  //definição das propriedades da struct
   mq_attributes.mq_flags = 0;
   mq_attributes.mq_maxmsg = 10;
   mq_attributes.mq_msgsize = 32;
 
+  //criação da variavel da mqueue
   mqd_t mqueue;
 
+  //abertura da mqueue
   mqueue = mq_open("/mqueue", O_CREAT | O_RDWR, 0666, &mq_attributes);
   if (mqueue == (mqd_t)-1) {
      perror("");
@@ -138,6 +142,7 @@ int main(int argc, char** argv) {
 
   std::cout << "Mqueue aberta \n";
 
+  //propriedades do receive da mqueue
   char m_received[32];
   unsigned int m_priority = 0;
 
@@ -150,32 +155,33 @@ int main(int argc, char** argv) {
   
 
   std::cout << "Propriedades definidas \n";
+  std::cout << "o arquivo ta recebendo mudanças??";
+
 
   while (true) {
 
+  //receptor de mensagem
   ssize_t size_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
   
-    if (size_receive == -1) {
-       perror("");
-       std::cout << "Mensagem não recebida";
-    }
-    else if(strcmp(m_received, i_received) == 0){
-      std::cout << "Mensagem " << m_received << " recebida \n";
-    }
-    else if(strcmp(m_received, r_received) == 0){
-      std::cout << "Mensagem " << m_received << " recebida \n";
-    }
-    else if(strcmp(m_received, s_received) == 0){
-      std::cout << "Mensagem " << m_received << " recebida \n";
-    }
-    else if(strcmp(m_received, u_received) == 0){
-      std::cout << "Mensagem " << m_received << " recebida \n";
-    }
-    else if(strcmp(m_received, q_received) == 0){
-      std::cout << "Mensagem " << m_received << " recebida \n";
-    }
-    
-  
+  if (size_receive == -1) {
+    perror("");
+    std::cout << "Mensagem não recebida";
+  }
+  else if(strcmp(m_received, i_received) == 0){
+     std::cout << "Mensagem " << m_received << " recebida \n";
+  }
+  else if(strcmp(m_received, r_received) == 0){
+    std::cout << "Mensagem " << m_received << " recebida \n";
+  }
+  else if(strcmp(m_received, s_received) == 0){
+    std::cout << "Mensagem " << m_received << " recebida \n";
+  }
+  else if(strcmp(m_received, u_received) == 0){
+    std::cout << "Mensagem " << m_received << " recebida \n";
+  }
+  else if(strcmp(m_received, q_received) == 0){
+    std::cout << "Mensagem " << m_received << " recebida \n";
+  } 
 
   }
   return 0;
