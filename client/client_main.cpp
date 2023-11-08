@@ -4,7 +4,7 @@
 #include <cstring>
 #include <string>
 #include <mqueue.h>
-
+#include <cerrno>
 struct mq_attr mq_attributes; //criando a struct que vai possuir as propriedades da mensagem
 
 
@@ -36,51 +36,53 @@ if(std::strcmp(argv[1], "simpledb") == 0){
     //insert
         if(std::strcmp(argv[2], "insert") == 0){
           
-          if (mq_send(mqueue, m_insert, strlen(m_insert), 1) == -1){
+          if(mq_send(mqueue, m_insert, strlen(m_insert), 1) == -1){
             perror("");
-            std::cout << "ta dando erro na queue";
+            std::cout << "Está ocorrendo um erro no enviar da queue";
           }
-          std::cout << "Mensagem " << m_insert << " lançada ao sistema"; //ta enviando ta retornando 0
+          std::cout << "Mensagem " << m_insert << " lançada ao sistema";
         }
     //remove
         else if(std::strcmp(argv[2], "remove") == 0){
-          mq_send(mqueue, m_remove, strlen(m_remove + 1), 1);
+          if(mq_send(mqueue, m_remove, strlen(m_remove), 1) == -1){
+            perror("");
+            std::cout << "Está ocorrendo um erro no enviar da queue";
+          }
           std::cout << "Mensagem " << m_remove << " lançada ao sistema"; 
         }
     //search
         else if(std::strcmp(argv[2], "search") == 0){
-          mq_send(mqueue, m_search, strlen(m_search + 1), 1);
+          if(mq_send(mqueue, m_search, strlen(m_search), 1) == -1){
+            perror("");
+            std::cout << "Está ocorrendo um erro no enviar da queue";
+          }
           std::cout << "Mensagem " << m_search << " lançada ao sistema";
         }
     //update  
         else if(std::strcmp(argv[2], "update") == 0){
-          mq_send(mqueue, m_update, strlen(m_update + 1), 1);
+          if(mq_send(mqueue, m_update, strlen(m_update), 1) == -1){
+            perror("");
+            std::cout << "Está ocorrendo um erro no enviar da queue";
+          }
           std::cout << "Mensagem " << m_update << " lançada ao sistema";
         }
     //quit
         else if(std::strcmp(argv[2], "quit") == 0){
-          mq_send(mqueue, m_quit, strlen(m_quit + 1), 1);
+          if(mq_send(mqueue, m_quit, strlen(m_quit), 1) == -1){
+            perror("");
+            std::cout << "Está ocorrendo um erro no enviar da queue";
+          }
           mq_close(mqueue);
           mq_unlink("mqueue");
           std::cout << "Mensagem " << m_quit << " lançada ao sistema";
           exit(0);
         }
         else{
-          try{
-            throw 102;
-          }
-          catch (int exCode){
-            std::cout << "Error: " << exCode << "Segundo argumento incorreto, verifique o README.txt para lista de possiveis argumentos";
-          }
+          std::cout << "Error: Segundo argumento incorreto, verifique o README.txt para lista de possiveis argumentos";
         }     
     }
     else if(std::strcmp(argv[1], "simpledb") != 0){
-      try{
-        throw 103;
-      }
-      catch(int exCode){
-        std::cout << "Error: " << exCode << " Comandos devem ter simpledb como primeiro argumento";
-      }
+      std::cout << "Error: Comandos devem ter simpledb como primeiro argumento";
     }
           return 0;
 }
