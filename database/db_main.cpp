@@ -7,8 +7,6 @@
 #include <cstdlib>
 #include <stdexcept>
 #include <thread>
-#include <boost/thread.hpp>
-#include <boost/chrono.hpp>
 #include <mqueue.h>
 #include <cerrno>
 
@@ -16,7 +14,7 @@ class writeToFile {
 public:
   std::fstream dbFile;
 
-  void wToFile(std::map<int, std::string> db) {  // escreve os pares no arquivo
+  void wToFile(std::map<std::string, std::string> db) {  // escreve os pares no arquivo
       dbFile.open("dbLog.txt", std::ios::out);
       if (dbFile.is_open()){
         for (auto pair : db) {
@@ -41,7 +39,7 @@ public:
 
 class debugTools {
 public:
-  void displayDB(std::map<int, std::string> db) { // ferramenta de debug imprime os pares no console
+  void displayDB(std::map<std::string, std::string> db) { // ferramenta de debug imprime os pares no console
       for (auto pair : db) {
         std::cout << pair.first << " " << pair.second << std::endl;
       }
@@ -54,10 +52,10 @@ public:
 class simpledb {
 public:
   writeToFile write;
-  std::map<int, std::string> db;
+  std::map<std::string, std::string> db;
 
-  void dbInsert(int userKey, std::string userValue) { // inserir no banco de dados
-      db.insert(std::pair<int, std::string>(userKey, userValue));
+  void dbInsert(std::string userKey, std::string userValue) { // inserir no banco de dados
+      db.insert(std::pair<std::string, std::string>(userKey, userValue));
       std::cout << "A chave é " << userKey << " o valor é " << userValue << std::endl;
       write.wToFile(db);
       if (db.empty()) {
@@ -100,10 +98,10 @@ public:
 void dbUpdate(std::string valueToRemove, std::string valueToInsert) { // substitui um valor existente no db por um novo valor
       for (auto i = db.begin(); i != db.end();) {
         if (i->second == valueToRemove) {
-          const int whereToInsert = i->first;
+          const std::string whereToInsert = i->first;
           std::cout << "O valor removido foi " << valueToRemove << std::endl;
           i = db.erase(i);
-          db.insert(std::pair<int, std::string>(whereToInsert, valueToInsert));
+          db.insert(std::pair<std::string, std::string>(whereToInsert, valueToInsert));
           write.clearFile();
           write.wToFile(db);
         }
@@ -151,24 +149,35 @@ int main(int argc, char** argv) {
   const char* r_received = "remove";
   const char* s_received = "search";
   const char* u_received = "update";
-  const char* q_received = "update";
+  const char* q_received = "quit";
   
 
   std::cout << "Propriedades definidas \n";
-  std::cout << "o arquivo ta recebendo mudanças??";
-
 
   while (true) {
-
   //receptor de mensagem
-  ssize_t size_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
+  ssize_t f_argument = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
   
-  if (size_receive == -1) {
+  if (f_argument == -1) {
     perror("");
     std::cout << "Mensagem não recebida";
+  } 
+  else{
+   m_received[f_argument] = '\0';
+   std::cout << m_received << std::endl;
   }
-  else if(strcmp(m_received, i_received) == 0){
-     std::cout << "Mensagem " << m_received << " recebida \n";
+  
+  //Debug pra saber se a mensagem de cada tipo ta sendo recebida
+  if(strcmp(m_received, i_received) == 0){
+    std::cout << "Mensagem " << m_received << " recebida \n";
+
+    ssize_t uv_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
+    m_received[uv_receive] = '\0';
+    std::cout << "keyValue " << m_received << " recebido \n";
+
+    ssize_t uk_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
+    m_received[uk_receive] = '\0';
+    std::cout << "userValue " << m_received << " recebido \n";
   }
   else if(strcmp(m_received, r_received) == 0){
     std::cout << "Mensagem " << m_received << " recebida \n";
@@ -181,8 +190,12 @@ int main(int argc, char** argv) {
   }
   else if(strcmp(m_received, q_received) == 0){
     std::cout << "Mensagem " << m_received << " recebida \n";
+    break;
+
   } 
 
   }
+
+  std::cout << "sai com segurança do while infinito";
   return 0;
 }
