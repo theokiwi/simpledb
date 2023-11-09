@@ -26,7 +26,7 @@ struct mq_attr mq_attributes; //criando a struct que vai possuir as propriedades
   //propriedades da mensagem
   mq_attributes.mq_flags = 0;       
   mq_attributes.mq_maxmsg = 10;      
-  mq_attributes.mq_msgsize = 32; 
+  mq_attributes.mq_msgsize = 1024; 
   //
 
   //definição dos atributos da queue
@@ -45,37 +45,57 @@ if(std::strcmp(argv[1], "simpledb") == 0){
             perror("");
             std::cout << "Está ocorrendo um erro ao enviar o 'tipo de mensagem da queue'";
            }
-           if (mq_send(mqueue, userValue, strlen(userKey), 1) == -1){
+           if (mq_send(mqueue, userKey, strlen(userKey), 1) == -1){
             perror("");
-            std::cout << "Está ocorrendo um erro ao enviar o 'valor texto do par'";
+            std::cout << "Está ocorrendo um erro ao enviar o 'userKey'";
            }
-           if (mq_send(mqueue, userKey, strlen(userValue), 1) == -1){
+           if (mq_send(mqueue, userValue, strlen(userValue), 1) == -1){
             perror("");
-            std::cout << "Está ocorrendo um erro ao enviar o 'valor númerico do par'";
+            std::cout << "Está ocorrendo um erro ao enviar o 'userValue'";
            }
            std::cout << "VIA CLIENTE: Mensagem " << m_insert << " lançada ao sistema";
          }
     //remove 
         else if(std::strcmp(argv[2], "remove") == 0){ //precisa de string userValue
+        const char* userValue = argv[3];
           if(mq_send(mqueue, m_remove, strlen(m_remove), 1) == -1){
             perror("");
             std::cout << "Está ocorrendo um erro no enviar da queue";
           }
-          std::cout << "Mensagem " << m_remove << " lançada ao sistema"; 
+          if (mq_send(mqueue, userValue, strlen(userValue), 1) == -1){
+            perror("");
+            std::cout << "Está ocorrendo um erro ao enviar o 'userValue'";
+          }
+          std::cout << "VIA CLIENTE: Mensagem " << m_remove << " lançada ao sistema"; 
         }
     //search
         else if(std::strcmp(argv[2], "search") == 0){ //precisa de string userValue
+        const char* userValue = argv[3];
           if(mq_send(mqueue, m_search, strlen(m_search), 1) == -1){
             perror("");
             std::cout << "Está ocorrendo um erro no enviar da queue";
           }
+          if (mq_send(mqueue, userValue, strlen(userValue), 1) == -1){
+            perror("");
+            std::cout << "Está ocorrendo um erro ao enviar o 'userValue'";
+          }
           std::cout << "VIA CLIENTE: Mensagem " << m_search << " lançada ao sistema";
         }
     //update  
-        else if(std::strcmp(argv[2], "update") == 0){ //
+        else if(std::strcmp(argv[2], "update") == 0){ //precisa de userValueToRemove e userValueToInsert
+        const char* uv_remove = argv[3];
+        const char* uv_new = argv[4];
           if(mq_send(mqueue, m_update, strlen(m_update), 1) == -1){
             perror("");
             std::cout << "Está ocorrendo um erro no enviar da queue";
+          }
+          if(mq_send(mqueue, uv_remove, strlen(uv_remove), 1) == -1){
+            perror("");
+            std::cout << "Está ocorrendo um erro ao enviar o 'userValue' a ser removido";
+          }
+          if(mq_send(mqueue, uv_new, strlen(uv_new), 1) == -1){
+            perror("");
+            std::cout << "Está ocorrendo um erro ao enviar o 'userValue' a ser inserido";
           }
           std::cout << "VIA CLIENTE: Mensagem " << m_update << " lançada ao sistema";
         }

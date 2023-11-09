@@ -141,7 +141,7 @@ int main(int argc, char** argv) {
   std::cout << "Mqueue aberta \n";
 
   //propriedades do receive da mqueue
-  char m_received[32];
+  char m_received[1024];
   unsigned int m_priority = 0;
 
   //grupos de possiveis mensagens a serem recebidas:
@@ -162,13 +162,7 @@ int main(int argc, char** argv) {
     perror("");
     std::cout << "Mensagem não recebida";
   } 
-  else{
-   m_received[f_argument] = '\0';
-   std::cout << m_received << std::endl;
-  }
-  
-  //Debug pra saber se a mensagem de cada tipo ta sendo recebida
-  if(strcmp(m_received, i_received) == 0){
+  else if(strcmp(m_received, i_received) == 0){
     std::cout << "Mensagem " << m_received << " recebida \n";
 
     ssize_t uv_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
@@ -181,21 +175,35 @@ int main(int argc, char** argv) {
   }
   else if(strcmp(m_received, r_received) == 0){
     std::cout << "Mensagem " << m_received << " recebida \n";
+
+    ssize_t uk_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
+    m_received[uk_receive] = '\0';
+    std::cout << "userValue " << m_received << " recebido \n";
   }
   else if(strcmp(m_received, s_received) == 0){
     std::cout << "Mensagem " << m_received << " recebida \n";
+
+    ssize_t uk_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
+    m_received[uk_receive] = '\0';
+    std::cout << "userValue " << m_received << " recebido \n";
   }
   else if(strcmp(m_received, u_received) == 0){
     std::cout << "Mensagem " << m_received << " recebida \n";
+
+    ssize_t uv_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
+    m_received[uv_receive] = '\0';
+    std::cout << "UserValue a ser removido " << m_received << " recebido \n";
+
+    ssize_t uk_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
+    m_received[uk_receive] = '\0';
+    std::cout << "UserValue a ser inserido " << m_received << " recebido \n";
   }
   else if(strcmp(m_received, q_received) == 0){
     std::cout << "Mensagem " << m_received << " recebida \n";
-    break;
-
+    exit(0);
   } 
 
   }
 
-  std::cout << "sai com segurança do while infinito";
   return 0;
 }
