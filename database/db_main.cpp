@@ -9,6 +9,7 @@
 #include <thread>
 #include <mqueue.h>
 #include <cerrno>
+#include <semaphore>
 
 class writeToFile {
 public:
@@ -112,33 +113,49 @@ void dbUpdate(std::string valueToRemove, std::string valueToInsert) { // substit
       }
 }
 };
-class MyThread {
-  
-};
 
 struct mq_attr mq_attributes; //struct que guarda as propriedades da mensagem
 
-int main(int argc, char** argv) {
+struct mq_attr mq_r_attributes;
 
+int main(int argc, char** argv) {
+  simpledb sdb;
+
+  //criação das variaveis da mqueue
+  mqd_t mqueue;
+  mqd_t mqueue_response;
+
+  
   std::cout << "Main iniciada \n";
 
-  //definição das propriedades da struct
+  //definição das propriedades da struct que recebe resposta
   mq_attributes.mq_flags = 0;
   mq_attributes.mq_maxmsg = 10;
-  mq_attributes.mq_msgsize = 32;
+  mq_attributes.mq_msgsize = 1024;
 
-  //criação da variavel da mqueue
-  mqd_t mqueue;
+  //definição das propriedades da struct que envia confirmação
+  mq_r_attributes.mq_flags = 0;
+  mq_r_attributes.mq_maxmsg = 10;
+  mq_r_attributes.mq_msgsize = 1024;
 
-  //abertura da mqueue
+  //abertura das mqueue
   mqueue = mq_open("/mqueue", O_CREAT | O_RDWR, 0666, &mq_attributes);
   if (mqueue == (mqd_t)-1) {
      perror("");
-     std::cout << "Queue não aberta \n";
+     std::cout << "Queue que recebe mensagem não aberta \n";
      return 1;
   }
 
-  std::cout << "Mqueue aberta \n";
+  std::cout << "Mqueue que recebe mensagem aberta \n";
+
+  mqueue_response = mq_open("/mqueue_response", O_CREAT | O_RDWR, 0666, &mq_r_attributes);
+  if (mqueue_response == (mqd_t)-1) {
+     perror("");
+     std::cout << "Queue que envia confirmação não aberta \n";
+     return 1;
+  }
+
+  std::cout << "Mqueue que envia confirmação aberta\n";
 
   //propriedades do receive da mqueue
   char m_received[1024];
@@ -165,13 +182,38 @@ int main(int argc, char** argv) {
   else if(strcmp(m_received, i_received) == 0){
     std::cout << "Mensagem " << m_received << " recebida \n";
 
-    ssize_t uv_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
-    m_received[uv_receive] = '\0';
-    std::cout << "keyValue " << m_received << " recebido \n";
-
     ssize_t uk_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
     m_received[uk_receive] = '\0';
+    std::string userKey = m_received;
+    std::cout << "keyValue " << m_received << " recebido \n";
+
+    if(mq_send(mqueue_response, m_received, strlen(m_received), 1) == -1){
+      perror("");
+      std::cout << "Erro ao enviar resposta de KeyValue\n";
+    }
+    else{
+      std::cout << "Mensagem keyValue enviada ao client\n";
+    }
+
+    ssize_t uv_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
+    m_received[uv_receive] = '\0';
+    std::string userValue = m_received;
     std::cout << "userValue " << m_received << " recebido \n";
+    
+    if(mq_send(mqueue_response, m_received, strlen(m_received), 1) == -1){
+      perror("");
+      std::cout << "Erro ao enviar resposta de userValue\n";
+    }
+    else{
+      std::cout << "Mensagem userValue enviada ao client\n";
+    }
+
+    // auto toInsert = [&sdb](std::string userKey, std::string userValue){
+    //   sdb.dbInsert(userKey, userValue);
+    // }; //o problema é que a função anonima não sabe que o sdb existe. ver exemplos de codigo e reestruturar o codigo
+
+    // std::thread t_insert(toInsert);
+    // t_insert.join();
   }
   else if(strcmp(m_received, r_received) == 0){
     std::cout << "Mensagem " << m_received << " recebida \n";
@@ -179,6 +221,14 @@ int main(int argc, char** argv) {
     ssize_t uk_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
     m_received[uk_receive] = '\0';
     std::cout << "userValue " << m_received << " recebido \n";
+
+    if(mq_send(mqueue_response, m_received, strlen(m_received), 1) == -1){
+    perror("");
+    std::cout << "Erro ao enviar resposta de valor removido\n";
+    }
+    else{
+      std::cout << "Mensagem valor removido enviada ao client\n";
+    }
   }
   else if(strcmp(m_received, s_received) == 0){
     std::cout << "Mensagem " << m_received << " recebida \n";
@@ -186,6 +236,16 @@ int main(int argc, char** argv) {
     ssize_t uk_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
     m_received[uk_receive] = '\0';
     std::cout << "userValue " << m_received << " recebido \n";
+
+    const char* m_send = "teste";
+
+    if(mq_send(mqueue_response, m_send, strlen(m_send), 1) == -1){
+    perror("");
+    std::cout << "Erro ao enviar resposta de valor pesquisado\n";
+    }
+    else{
+      std::cout << "Mensagem valor pesquisado enviado ao client\n";
+    }
   }
   else if(strcmp(m_received, u_received) == 0){
     std::cout << "Mensagem " << m_received << " recebida \n";
@@ -194,12 +254,39 @@ int main(int argc, char** argv) {
     m_received[uv_receive] = '\0';
     std::cout << "UserValue a ser removido " << m_received << " recebido \n";
 
+     if(mq_send(mqueue_response, m_received, strlen(m_received), 1) == -1){
+      perror("");
+      std::cout << "Erro ao enviar resposta do antigo userValue removido\n";
+    }
+    else{
+      std::cout << "Antigo userValue removido enviado ao cliente\n";
+    }
+
     ssize_t uk_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
     m_received[uk_receive] = '\0';
     std::cout << "UserValue a ser inserido " << m_received << " recebido \n";
+
+     if(mq_send(mqueue_response, m_received, strlen(m_received), 1) == -1){
+      perror("");
+      std::cout << "Erro ao enviar resposta do novo userValue inserida\n";
+    }
+    else{
+      std::cout << "Novo userValue inserido enviado ao cliente\n";
+    }
   }
   else if(strcmp(m_received, q_received) == 0){
-    std::cout << "Mensagem " << m_received << " recebida \n";
+    ssize_t qt_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
+    m_received[qt_receive] = '\0';
+    std::cout << "Comando " << m_received << " recebido \n";
+    
+    if(mq_send(mqueue_response, m_received, strlen(m_received), 1) == -1){
+      perror("");
+      std::cout << "Erro ao enviar a informação de quit\n";
+    }
+    else{
+      std::cout << "Informação de quit enviada\n";
+    }
+    break;
     exit(0);
   } 
 
