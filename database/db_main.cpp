@@ -9,7 +9,8 @@
 #include <thread>
 #include <mqueue.h>
 #include <cerrno>
-#include <semaphore>
+#include <future>
+#include <mutex>
 
 class writeToFile {
 public:
@@ -22,7 +23,7 @@ public:
           dbFile << pair.first << " " << pair.second << std::endl;
         }
       } else {
-        std::cout <<"O arquivo de escrita não pode ser aberto";
+        std::cout <<"O arquivo de escrita não pode ser aberto\n";
       }
     dbFile.close();
   }
@@ -32,7 +33,7 @@ public:
       if (dbFile.is_open()) {
         dbFile.clear();
       } else {
-        std::cout << "O arquivo de escrita não pode ser aberto";
+        std::cout << "O arquivo de escrita não pode ser aberto\n";
       }
     dbFile.close();
   }
@@ -44,60 +45,53 @@ public:
       for (auto pair : db) {
         std::cout << pair.first << " " << pair.second << std::endl;
       }
-      if (db.empty()) {
-        std::cout << ("A database não foi encontrada");
-      }
   }
 };
 
 class simpledb {
 public:
   writeToFile write;
+  debugTools debug;
   std::map<std::string, std::string> db;
 
   void dbInsert(std::string userKey, std::string userValue) { // inserir no banco de dados
       db.insert(std::pair<std::string, std::string>(userKey, userValue));
-      std::cout << "A chave é " << userKey << " o valor é " << userValue << std::endl;
       write.wToFile(db);
-      if (db.empty()) {
-        std::cout << ("A database não foi encontrada");
-      }
+      std::cout << "A chave é " << userKey << " o valor é " << userValue << std::endl;
+      debug.displayDB(db);
     } 
-  
 
-  bool dbSearch(std::string userValue){ // pesquisa no banco de dados um valor
-      for (auto i = db.begin(); i != db.end();){
-        if (i->second == userValue) {
-          std::cout << "Encontrado";
-          return true;
+  bool dbSearch(std::string userValue) {
+    for (auto i = db.begin(); i != db.end(); i++) {
+        std::cout << "entrei no loop\n";
+        if (i-> second == userValue) {
+            std::cout << "Encontrado";
+
+            return true;
         }
-        i++;
-      }
-      if (db.empty()) {
-        std::cout << ("A database não foi encontrada");
-      }
-    std::cout << "Não encontrado";
+    }
+    std::cout << "Não encontrado\n";
     return false;
-  }
+}
+
   
 
-  void dbRemove(std::string userValue) { // remove do banco de dados o valor apontado pelo usuário
+ void dbRemove(std::string userValue) { // remove do banco de dados o valor apontado pelo usuário
       for (auto i = db.begin(); i != db.end();) {
-        if (dbSearch(userValue)) {
-          std::cout << "O valor removido foi " << userValue;
+        if (dbSearch(userValue) == true) {
           i = db.erase(i);
           write.clearFile();
           write.wToFile(db);
-        }
+          debug.displayDB(db);
+          std::cout << "\n";
+          std::cout << "O valor removido foi " << userValue << "\n";
+        } 
         i++;
-      }
-      if (db.empty()) {
-        std::cout << ("A database não foi encontrada");
       }
   }
 
 void dbUpdate(std::string valueToRemove, std::string valueToInsert) { // substitui um valor existente no db por um novo valor
-      for (auto i = db.begin(); i != db.end();) {
+        for (auto i = db.begin(); i != db.end();) {
         if (i->second == valueToRemove) {
           const std::string whereToInsert = i->first;
           std::cout << "O valor removido foi " << valueToRemove << std::endl;
@@ -199,6 +193,11 @@ int main(int argc, char** argv) {
     m_received[uv_receive] = '\0';
     std::string userValue = m_received;
     std::cout << "userValue " << m_received << " recebido \n";
+
+    std::thread t_insert([userKey, userValue, &sdb](){
+      sdb.dbInsert(userKey, userValue);
+    });
+    t_insert.join();
     
     if(mq_send(mqueue_response, m_received, strlen(m_received), 1) == -1){
       perror("");
@@ -207,20 +206,19 @@ int main(int argc, char** argv) {
     else{
       std::cout << "Mensagem userValue enviada ao client\n";
     }
-
-    // auto toInsert = [&sdb](std::string userKey, std::string userValue){
-    //   sdb.dbInsert(userKey, userValue);
-    // }; //o problema é que a função anonima não sabe que o sdb existe. ver exemplos de codigo e reestruturar o codigo
-
-    // std::thread t_insert(toInsert);
-    // t_insert.join();
   }
   else if(strcmp(m_received, r_received) == 0){
     std::cout << "Mensagem " << m_received << " recebida \n";
 
     ssize_t uk_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
     m_received[uk_receive] = '\0';
+    std::string userValue = m_received;
     std::cout << "userValue " << m_received << " recebido \n";
+
+    std::thread t_remove([userValue, &sdb](){
+      sdb.dbRemove(userValue);
+    });
+    t_remove.join();
 
     if(mq_send(mqueue_response, m_received, strlen(m_received), 1) == -1){
     perror("");
@@ -229,15 +227,36 @@ int main(int argc, char** argv) {
     else{
       std::cout << "Mensagem valor removido enviada ao client\n";
     }
+
+
   }
   else if(strcmp(m_received, s_received) == 0){
     std::cout << "Mensagem " << m_received << " recebida \n";
 
     ssize_t uk_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
     m_received[uk_receive] = '\0';
+    std::string userValue = m_received;
     std::cout << "userValue " << m_received << " recebido \n";
 
-    const char* m_send = "teste";
+    std::promise<bool> wasFound;
+    std::future<bool> foundResult = wasFound.get_future();
+
+    std::thread t_search([userValue, &wasFound,&sdb](){
+      bool result = sdb.dbSearch(userValue);
+      wasFound.set_value(result);
+      
+    });
+    t_search.join();
+
+    bool resultFromThread = foundResult.get();
+    const char* m_send;
+
+    if (resultFromThread == true){
+      m_send = "encontrado";
+    }
+    else{
+      m_send = "não encontrado";
+    }
 
     if(mq_send(mqueue_response, m_send, strlen(m_send), 1) == -1){
     perror("");
@@ -252,6 +271,7 @@ int main(int argc, char** argv) {
 
     ssize_t uv_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
     m_received[uv_receive] = '\0';
+    std::string userRm = m_received;
     std::cout << "UserValue a ser removido " << m_received << " recebido \n";
 
      if(mq_send(mqueue_response, m_received, strlen(m_received), 1) == -1){
@@ -263,8 +283,16 @@ int main(int argc, char** argv) {
     }
 
     ssize_t uk_receive = mq_receive(mqueue, m_received, sizeof(m_received), &m_priority);
+    std::string userIn = m_received;
     m_received[uk_receive] = '\0';
     std::cout << "UserValue a ser inserido " << m_received << " recebido \n";
+
+
+    std::thread t_update([userRm, userIn ,&sdb](){
+      sdb.dbUpdate(userRm, userIn);
+      
+    });
+    t_update.join();
 
      if(mq_send(mqueue_response, m_received, strlen(m_received), 1) == -1){
       perror("");
@@ -286,7 +314,6 @@ int main(int argc, char** argv) {
     else{
       std::cout << "Informação de quit enviada\n";
     }
-    break;
     exit(0);
   } 
 

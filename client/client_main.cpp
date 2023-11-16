@@ -5,8 +5,8 @@
 #include <string>
 #include <mqueue.h>
 #include <cerrno>
-#include <semaphore>
 #include <chrono>
+#include <mutex>
 
 struct mq_attr mq_attributes; //criando a struct que vai possuir as propriedades da mensagem que envia
 
@@ -73,13 +73,13 @@ if(std::strcmp(argv[1], "simpledb") == 0){
           std::this_thread::sleep_for(std::chrono::seconds(1));
 
           ssize_t ukReceive = mq_receive(mqueue_response, m_received, sizeof(m_received), &m_priority);
+          m_received[ukReceive] = '\0';
           std::cout << "VIA DB: KeyValue " << m_received << " inserido no banco de dados \n";
 
-          std::this_thread::sleep_for(std::chrono::seconds(1));
 
           ssize_t uvReceive = mq_receive(mqueue_response, m_received, sizeof(m_received), &m_priority);
+          m_received[uvReceive] = '\0';
           std::cout << "VIA DB: UserValue " << m_received << " inserido no banco de dados \n";
-
           //blocking mq_receive
         }
     //remove 
@@ -95,11 +95,9 @@ if(std::strcmp(argv[1], "simpledb") == 0){
           }
           std::cout << "VIA CLIENTE: Mensagem " << m_remove << " lançada ao sistema\n"; 
 
-          std::this_thread::sleep_for(std::chrono::seconds(1));
-
           ssize_t rmReceive = mq_receive(mqueue_response, m_received, sizeof(m_received), &m_priority);
+          m_received[rmReceive] = '\0';
           std::cout << "VIA DB: UserValue" << m_received << " removido do banco de dados \n";
-
         }
     //search
         else if(std::strcmp(argv[2], "search") == 0){ //precisa de string userValue
@@ -114,9 +112,8 @@ if(std::strcmp(argv[1], "simpledb") == 0){
           }
           std::cout << "VIA CLIENTE: Mensagem " << m_search << " lançada ao sistema\n";
 
-          std::this_thread::sleep_for(std::chrono::seconds(1));
-
           ssize_t shReceive = mq_receive(mqueue_response, m_received, sizeof(m_received), &m_priority);
+          m_received[shReceive] = '\0';
           std::cout << "VIA DB: o resultado da pesquisa no banco de dados é " << m_received;
 
         }
@@ -142,11 +139,12 @@ if(std::strcmp(argv[1], "simpledb") == 0){
 
 
           ssize_t oldReceive = mq_receive(mqueue_response, m_received, sizeof(m_received), &m_priority);
+          m_received[oldReceive] = '\0';
           std::cout << "VIA DB: KeyValue " << m_received << " removido do banco de dados \n";
 
-          std::this_thread::sleep_for(std::chrono::seconds(1));
 
           ssize_t newReceive = mq_receive(mqueue_response, m_received, sizeof(m_received), &m_priority);
+          m_received[newReceive] = '\0';
           std::cout << "VIA DB: UserValue " << m_received << " inserido no banco de dados \n";
 
         }
@@ -158,10 +156,10 @@ if(std::strcmp(argv[1], "simpledb") == 0){
           }
           std::cout << "VIA CLIENTE: Mensagem " << m_quit << " lançada ao sistema\n";
 
-          std::this_thread::sleep_for(std::chrono::seconds(1));
-
           ssize_t qtReceive = mq_receive(mqueue_response, m_received, sizeof(m_received), &m_priority);
+          m_received[qtReceive] = '\0';
           std::cout << "VIA DB: Mensagem " << m_received << " lançada ao sistema \n";
+
 
         }
         else{
@@ -174,5 +172,6 @@ if(std::strcmp(argv[1], "simpledb") == 0){
   else if(std::strcmp(argv[1], "simpledb") != 0 && std::strcmp(argv[1], "quit") != 0){
     std::cout << "Error: Comandos devem ter simpledb como primeiro argumento\n";
   }
-          return 0;
+
+  return 0;
 }
