@@ -1,5 +1,5 @@
 # simpledb
-A simple non sql database for the course "Sistemas Operacionais" on PUC Minas. Built on C++.  
+A simple non sql database for the course "Sistemas Operacionais" on PUC Minas. Built on C++. Features multithread and IPC message queue.
 
 Commands:  
 To open the DB: ./db_main  
