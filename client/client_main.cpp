@@ -6,7 +6,6 @@
 #include <mqueue.h>
 #include <cerrno>
 #include <chrono>
-#include <mutex>
 
 struct mq_attr mq_attributes; //criando a struct que vai possuir as propriedades da mensagem que envia
 

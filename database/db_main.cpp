@@ -2,7 +2,6 @@
 #include <iostream>
 #include <map>
 #include <string>
-#include <fstream>
 #include <cstring>
 #include <cstdlib>
 #include <stdexcept>
@@ -10,7 +9,13 @@
 #include <mqueue.h>
 #include <cerrno>
 #include <future>
+#include <fstream>
 #include <mutex>
+
+
+//não consegui implementar o problema dos produtores e consumidores então por enquanto estou simplesmente usando um mutex
+
+std::mutex mq_mutex; 
 
 class writeToFile {
 public:
@@ -20,7 +25,9 @@ public:
       dbFile.open("dbLog.txt", std::ios::out);
       if (dbFile.is_open()){
         for (auto pair : db) {
+          mq_mutex.lock();
           dbFile << pair.first << " " << pair.second << std::endl;
+          mq_mutex.unlock();
         }
       } else {
         std::cout <<"O arquivo de escrita não pode ser aberto\n";
@@ -31,14 +38,18 @@ public:
   void clearFile() { // responsável por limpar o arquivo
       dbFile.open("dbLog.txt", std::ios::out);
       if (dbFile.is_open()) {
+        mq_mutex.lock();
         dbFile.clear();
+        mq_mutex.unlock();
       } else {
         std::cout << "O arquivo de escrita não pode ser aberto\n";
       }
     dbFile.close();
   }
 };
+//as funções acima tem sincronização dentro de si por isso não é travado um mutex quando elas são chamadas, elas fazem isso sozinhas
 
+//ferramente de debug exibe toda a base de dados
 class debugTools {
 public:
   void displayDB(std::map<std::string, std::string> db) { // ferramenta de debug imprime os pares no console
@@ -54,16 +65,19 @@ public:
   debugTools debug;
   std::map<std::string, std::string> db;
 
+  //insere ne base de dados
   void dbInsert(std::string userKey, std::string userValue) { // inserir no banco de dados
+      mq_mutex.lock();
       db.insert(std::pair<std::string, std::string>(userKey, userValue));
+      mq_mutex.unlock();
       write.wToFile(db);
       std::cout << "A chave é " << userKey << " o valor é " << userValue << std::endl;
       debug.displayDB(db);
     } 
 
-  bool dbSearch(std::string userValue) {
+  //pesquisa na base de dados
+  bool dbSearch(std::string userValue) { //não precisa de sincronização porque não escreve só le
     for (auto i = db.begin(); i != db.end(); i++) {
-        std::cout << "entrei no loop\n";
         if (i-> second == userValue) {
             std::cout << "Encontrado";
 
@@ -79,7 +93,9 @@ public:
  void dbRemove(std::string userValue) { // remove do banco de dados o valor apontado pelo usuário
       for (auto i = db.begin(); i != db.end();) {
         if (dbSearch(userValue) == true) {
+          mq_mutex.lock();
           i = db.erase(i);
+          mq_mutex.unlock();
           write.clearFile();
           write.wToFile(db);
           debug.displayDB(db);
@@ -93,10 +109,12 @@ public:
 void dbUpdate(std::string valueToRemove, std::string valueToInsert) { // substitui um valor existente no db por um novo valor
         for (auto i = db.begin(); i != db.end();) {
         if (i->second == valueToRemove) {
+          mq_mutex.lock();
           const std::string whereToInsert = i->first;
           std::cout << "O valor removido foi " << valueToRemove << std::endl;
           i = db.erase(i);
           db.insert(std::pair<std::string, std::string>(whereToInsert, valueToInsert));
+          mq_mutex.unlock();
           write.clearFile();
           write.wToFile(db);
         }
@@ -110,7 +128,7 @@ void dbUpdate(std::string valueToRemove, std::string valueToInsert) { // substit
 
 struct mq_attr mq_attributes; //struct que guarda as propriedades da mensagem
 
-struct mq_attr mq_r_attributes;
+struct mq_attr mq_r_attributes; 
 
 int main(int argc, char** argv) {
   simpledb sdb;
