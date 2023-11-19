@@ -4,7 +4,7 @@
 Uma base de dados não sql simples para a matéria "Sistemas OPeracionais" na PUC Minas. Feita em C++. Contém multithread e IPC message queue.  
 
 
-Commandos:  
+Comandos:  
 Para abrir a DB: ./db_main  
 Para inserir na DB: ./client_main simpledb insert key value;  
 Para remover da DB: ./client_main simpledb remove value;  
