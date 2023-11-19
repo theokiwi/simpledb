@@ -10,7 +10,7 @@ Para inserir na DB: ./client_main simpledb insert key value;
 Para remover da DB: ./client_main simpledb remove value;  
 Pata atualizar a DB: ./client_main simpledb update oldValue newValue;  
 Para pesquisar na DB: ./client_main simpledb search value;  
-Para sair da DB: ./client_main simpledb quit;
+Para sair da DB: ./client_main simpledb quit;  
 Para sair do client: ./client_main quit;  
 
 ## ENG  
