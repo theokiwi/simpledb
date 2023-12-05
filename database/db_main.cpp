@@ -11,6 +11,8 @@
 #include <future>
 #include <fstream>
 #include <mutex>
+#include <vector>
+#include <algorithm>
 
 
 //não consegui implementar o problema dos produtores e consumidores então por enquanto estou simplesmente usando um mutex
@@ -59,22 +61,16 @@ public:
   }
 };
 
+
 class simpledb {
 public:
   writeToFile write;
   debugTools debug;
   std::map<std::string, std::string> db;
+  int mxsize = 2;
+  std::vector<std::string> valueVector;
 
-  //insere ne base de dados
-  void dbInsert(std::string userKey, std::string userValue) { // inserir no banco de dados
-      mq_mutex.lock();
-      db.insert(std::pair<std::string, std::string>(userKey, userValue));
-      mq_mutex.unlock();
-      write.wToFile(db);
-      std::cout << "A chave é " << userKey << " o valor é " << userValue << std::endl;
-      debug.displayDB(db);
-    } 
-
+  
   //pesquisa na base de dados
   bool dbSearch(std::string userValue) { //não precisa de sincronização porque não escreve só le
     for (auto i = db.begin(); i != db.end(); i++) {
@@ -92,19 +88,71 @@ public:
 
  void dbRemove(std::string userValue) { // remove do banco de dados o valor apontado pelo usuário
       for (auto i = db.begin(); i != db.end();) {
-        if (dbSearch(userValue) == true) {
-          mq_mutex.lock();
-          i = db.erase(i);
-          mq_mutex.unlock();
-          write.clearFile();
-          write.wToFile(db);
-          debug.displayDB(db);
-          std::cout << "\n";
-          std::cout << "O valor removido foi " << userValue << "\n";
-        } 
-        i++;
-      }
+        if (dbSearch(userValue)) {
+            mq_mutex.lock();
+            i = db.erase(i);
+            mq_mutex.unlock();
+
+            write.clearFile();
+            write.wToFile(db);
+            debug.displayDB(db);
+
+            auto whereIs = std::find(valueVector.begin(), valueVector.end(), userValue);
+            if (whereIs != valueVector.end()) {
+                int index = std::distance(valueVector.begin(), whereIs);
+                valueVector.erase(valueVector.begin() + index);
+            }
+
+            std::cout << "\n";
+            std::cout << "O valor removido foi " << userValue << "\n";
+        } else {
+            ++i;
+        }
+    }
   }
+
+  void fifo(std::vector<std::string> valueVector){
+    std::string whichValue = valueVector[1];
+    dbRemove(whichValue);
+    std::cout << "O valor " << whichValue << " foi removido via FIFO porque a database estava cheia\n";
+  } 
+
+  void aging(std::map<std::string, std::string> db, std::vector<std::string> valueVector){
+
+  }
+
+  void lru(std::map<std::string, std::string> db, std::vector<std::string> valueVector){
+
+  }
+
+  //insere ne base de dados
+  void dbInsert(std::string userKey, std::string userValue) { // inserir no banco de dados
+    valueVector.push_back(userValue);
+      if (db.size() >= 1){
+        std::cout << "A database atingiu o tamanho máximo, escolha um metodo de remoção de 1 a 3 (1 = fifo, 2 = Aging, 3 = LRU)";
+        int method;
+        std::cin >> method;
+        switch(method){
+          case 1:
+          std::cout << "Iniciando remoção com metódo FIFO";
+          fifo(valueVector);
+          break;
+          case 2:
+          std::cout << "Iniciando remoção com método AGING";
+          break;
+          case 3:
+          std::cout << "Iniciando remoção com metódo LRU";
+          break;
+        }
+      }
+      mq_mutex.lock(); 
+      db.insert(std::pair<std::string, std::string>(userKey, userValue));
+      mq_mutex.unlock();
+      write.wToFile(db);
+      std::cout << "A chave é " << userKey << " o valor é " << userValue << std::endl;
+      debug.displayDB(db);
+    } 
+
 
 void dbUpdate(std::string valueToRemove, std::string valueToInsert) { // substitui um valor existente no db por um novo valor
         for (auto i = db.begin(); i != db.end();) {
@@ -125,7 +173,6 @@ void dbUpdate(std::string valueToRemove, std::string valueToInsert) { // substit
       }
 }
 };
-
 struct mq_attr mq_attributes; //struct que guarda as propriedades da mensagem
 
 struct mq_attr mq_r_attributes; 
